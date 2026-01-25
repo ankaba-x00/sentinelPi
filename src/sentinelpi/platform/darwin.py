@@ -61,6 +61,7 @@ class DarwinPlatform(Platform):
             comm = parts[3]
             args = parts[4] if len(parts) >= 5 else comm
             cmdline = args.split()
-            exe = comm
+            exe = cmdline[0] if cmdline else comm
+            exe = exe.strip()
             procs.append(ProcessInfo(pid=pid, ppid=ppid, user=user, exe=exe, cmdline=cmdline))
         return procs

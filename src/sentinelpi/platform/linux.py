@@ -107,6 +107,7 @@ class LinuxPlatform(Platform):
             comm = parts[3]
             args = parts[4] if len(parts) >= 5 else comm
             cmdline = args.split()
-            exe = comm  # v1; TODO: later resolve full path via /proc/<pid>/exe
+            exe = cmdline[0] if cmdline else comm  # v1; TODO: later resolve full path via /proc/<pid>/exe
+            exe = exe.strip()
             procs.append(ProcessInfo(pid=pid, ppid=ppid, user=user, exe=exe, cmdline=cmdline))
         return procs
