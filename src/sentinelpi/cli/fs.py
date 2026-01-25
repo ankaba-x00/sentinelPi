@@ -5,6 +5,7 @@ from sentinelpi.cli.context import CLIContext
 from sentinelpi.modules.fs.scanner import scan_paths
 from sentinelpi.modules.fs.baseline import save_baseline, load_baseline
 from sentinelpi.modules.fs.diff import diff_files
+from sentinelpi.core.events import Event
 
 
 BASELINE_PATH = Path.home() / ".sentinelpi" / "fs_baseline.json"
@@ -30,7 +31,12 @@ def baseline(ctx: CLIContext) -> None:
     records = scan_paths(paths)
 
     save_baseline(BASELINE_PATH, records)
-    click.echo(f"[DONE] Filesystem baseline saved ({len(records)} files)")
+    ctx.dispatcher.handle(Event(
+        type="done.fs.baseline_saved",
+        message=f"Filesystem baseline saved ({len(records)} files)",
+        data={"files": len(records)},
+        severity="done",
+    ))
 
 
 @fs.command()
@@ -39,27 +45,65 @@ def check(ctx: CLIContext) -> None:
     baseline = load_baseline(BASELINE_PATH)
 
     if not baseline:
-        click.echo("[ERROR] No filesystem baseline found. Run 'sentinelpi fs baseline' first.")
+        ctx.dispatcher.handle(Event(
+            type="error.fs.no_baseline",
+            message="No filesystem baseline found. Run 'sentinelpi fs baseline' first.",
+            severity="error",
+        ))
         return
 
     current = scan_paths(_default_paths())
     diff = diff_files(baseline, current)
 
     if not any(diff.values()):
-        click.echo("[OK] No filesystem integrity violations detected")
+        ctx.dispatcher.handle(Event(
+            type="ok.fs.clean",
+            message="No filesystem integrity violations detected",
+            severity="ok",
+        ))
         return
 
     if diff["modified"]:
-        click.echo(f"[WARN] Modified files detected: {len(diff['modified'])}")
+        ctx.dispatcher.handle(Event(
+            type="warn.fs.modified",
+            message=f"Modified files detected: {len(diff['modified'])}",
+            data={"count": len(diff["modified"])},
+            severity="warn",
+        ))
         for f in diff["modified"][:5]:
-            click.echo(f"  MOD {f.path}")
+            ctx.dispatcher.handle(Event(
+                type="info.fs.modified.file",
+                message=f"Modified: {f.path}",
+                data={"path": f.path},
+                severity="info",
+            ))
 
     if diff["new"]:
-        click.echo(f"[WARN] New files detected: {len(diff['new'])}")
+        ctx.dispatcher.handle(Event(
+            type="warn.fs.new",
+            message=f"New files detected: {len(diff['new'])}",
+            data={"count": len(diff["new"])},
+            severity="warn",
+        ))
         for f in diff["new"][:5]:
-            click.echo(f"  NEW {f.path}")
+            ctx.dispatcher.handle(Event(
+                type="info.fs.new.file",
+                message=f"New: {f.path}",
+                data={"path": f.path},
+                severity="info",
+            ))
 
     if diff["deleted"]:
-        click.echo(f"[WARN] Deleted files detected: {len(diff['deleted'])}")
+        ctx.dispatcher.handle(Event(
+            type="warn.fs.deleted",
+            message=f"Deleted files detected: {len(diff['deleted'])}",
+            data={"count": len(diff["deleted"])},
+            severity="warn",
+        ))
         for f in diff["deleted"][:5]:
-            click.echo(f"  DEL {f.path}")
+            ctx.dispatcher.handle(Event(
+                type="info.fs.deleted.file",
+                message=f"Deleted: {f.path}",
+                data={"path": f.path},
+                severity="info",
+            ))
