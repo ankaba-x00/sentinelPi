@@ -1,3 +1,6 @@
 [project]
 name = "sentinelpi"
 version = "0.1.0"
+
+[project.scripts]
+sentinelpi = "sentinelpi.cli.main:main"

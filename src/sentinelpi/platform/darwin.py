@@ -30,18 +30,18 @@ class DarwinPlatform(Platform):
                 check=False,
             )
         except subprocess.TimeoutExpired as e:
-            raise RuntimeError(f"Command timed out: {argv}") from e
+            raise RuntimeError(f"[ERROR] Command timed out: {argv}") from e
 
         if cp.returncode != 0:
-            raise RuntimeError(f"Command failed ({cp.returncode}): {argv}\n{cp.stderr.strip()}")
+            raise RuntimeError(f"[ERROR] Command failed ({cp.returncode}): {argv}\n{cp.stderr.strip()}")
 
         return cp.stdout
 
     def list_usb_devices(self) -> list[USBDevice]:
-        raise PlatformUnsupportedError("USB monitoring is not supported on macOS in v1.")
+        raise PlatformUnsupportedError("[ERROR] USB monitoring is not supported on macOS in v1.")
 
     def list_network_neighbors(self) -> list[NetNeighbor]:
-        raise PlatformUnsupportedError("Network discovery is not supported on macOS in v1.")
+        raise PlatformUnsupportedError("[ERROR] Network discovery is not supported on macOS in v1.")
 
     def list_processes(self) -> list[ProcessInfo]:
         # macOS `ps`: `ps -Ao pid,ppid,user,comm,args`

@@ -79,6 +79,6 @@ class Platform(ABC):
         feature examples: "usb", "net"
         """
         if feature == "usb" and not self.supports_usb_monitoring:
-            raise PlatformUnsupportedError(f"USB monitoring is not supported on {self.pretty_name}.")
+            raise PlatformUnsupportedError(f"[ERROR] USB monitoring is not supported on {self.pretty_name}.")
         if feature == "net" and not self.supports_network_discovery:
-            raise PlatformUnsupportedError(f"Network discovery is not supported on {self.pretty_name}.")
+            raise PlatformUnsupportedError(f"[ERROR] Network discovery is not supported on {self.pretty_name}.")

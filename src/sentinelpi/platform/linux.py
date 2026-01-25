@@ -29,10 +29,10 @@ class LinuxPlatform(Platform):
                 check=False,
             )
         except subprocess.TimeoutExpired as e:
-            raise RuntimeError(f"Command timed out: {argv}") from e
+            raise RuntimeError(f"[ERROR] Command timed out: {argv}") from e
 
         if cp.returncode != 0:
-            raise RuntimeError(f"Command failed ({cp.returncode}): {argv}\n{cp.stderr.strip()}")
+            raise RuntimeError(f"[ERROR] Command failed ({cp.returncode}): {argv}\n{cp.stderr.strip()}")
 
         return cp.stdout
 
