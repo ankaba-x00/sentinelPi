@@ -4,8 +4,9 @@ from pathlib import Path
 from sentinelpi.cli.context import CLIContext
 from sentinelpi.modules.proc.scanner import scan_processes
 from sentinelpi.modules.proc.baseline import save_baseline, load_baseline
+from sentinelpi.modules.proc.events import ProcEventFactory
 from sentinelpi.modules.proc.diff import diff_processes
-from sentinelpi.core.events import Event
+from sentinelpi.core.event_factory import EventFactory
 
 
 BASELINE_PATH = Path.home() / ".sentinelpi" / "proc_baseline.json"
@@ -26,103 +27,73 @@ def proc(ctx: CLIContext) -> None:
 @proc.command()
 @click.pass_obj
 def list(ctx: CLIContext) -> None:
+    proc_events = ProcEventFactory(
+        EventFactory(ctx.dispatcher, namespace="proc")
+    )
+
     processes = scan_processes(ctx.platform)
-    ctx.dispatcher.handle(Event(
-        type="info.proc.list",
-        message=f"Detected {len(processes)} running processes",
-        data={"count": len(processes)},
-        severity="info",
-    ))
+    proc_events.list_summary(len(processes))
 
     for p in processes[:10]:
-        exe = _shorten_path(p.exe)
-        ctx.dispatcher.handle(Event(
-            type="info.proc.list.item",
-            message=f"pid={p.pid} user={p.user} exe={exe}",
-            data={"pid": p.pid, "user": p.user, "exe": p.exe},
-            severity="info",
-        ))
+        proc_events.list_item(
+            pid=p.pid,
+            user=p.user,
+            exe=_shorten_path(p.exe),
+        )
 
 
 @proc.command()
 @click.pass_obj
 def baseline(ctx: CLIContext) -> None:
+    proc_events = ProcEventFactory(
+        EventFactory(ctx.dispatcher, namespace="proc")
+    )
+
     processes = scan_processes(ctx.platform)
     save_baseline(BASELINE_PATH, processes)
-    ctx.dispatcher.handle(Event(
-        type="done.proc.baseline_saved",
-        message=f"Process baseline saved ({len(processes)} entries)",
-        data={"count": len(processes)},
-        severity="done",
-    ))
+    proc_events.baseline_saved(len(processes))
 
 
 @proc.command()
 @click.pass_obj
 def check(ctx: CLIContext) -> None:
+    proc_events = ProcEventFactory(
+        EventFactory(ctx.dispatcher, namespace="proc")
+    )
+
     baseline = load_baseline(BASELINE_PATH)
     current = scan_processes(ctx.platform)
 
     if not baseline:
-        ctx.dispatcher.handle(Event(
-            type="error.proc.no_baseline",
-            message="No process baseline found. Run 'sentinelpi proc baseline' first.",
-            severity="error",
-        ))
+        proc_events.no_baseline()
         return
 
     result = diff_processes(baseline, current)
 
     if not result["new"] and not result["root"]:
-        ctx.dispatcher.handle(Event(
-            type="ok.proc.no_unexpected",
-            message="No unexpected processes detected",
-            severity="ok",
-        ))
+        proc_events.clean()
         return
 
     if result["new"]:
-        ctx.dispatcher.handle(Event(
-            type="warn.proc.new_processes",
-            message=f"New processes detected: {len(result['new'])}",
-            data={"count": len(result["new"])},
-            severity="warn",
-        ))
+        proc_events.new_processes(len(result["new"]))
         for p in result["new"]:
-            exe = _shorten_path(p.exe)
-            ctx.dispatcher.handle(Event(
-                type="info.proc.new_process",
-                message=f"NEW pid={p.pid} user={p.user} exe={exe}",
-                data={
-                    "pid": p.pid,
-                    "user": p.user,
-                    "exe": p.exe,
-                },
-                severity="info",
-            ))
+            proc_events.new_process(
+                pid=p.pid,
+                user=p.user,
+                exe=_shorten_path(p.exe),
+            )
 
     if result["root"]:
-        ctx.dispatcher.handle(Event(
-            type="warn.proc.root_processes",
-            message=f"Root-owned processes detected: {len(result['root'])}",
-            data={"count": len(result["root"])},
-            severity="warn",
-        ))
+        proc_events.root_processes(len(result["root"]))
 
         for p in result["root"][:10]:
-            exe = _shorten_path(p.exe)
-            ctx.dispatcher.handle(Event(
-                type="info.proc.root_process",
-                message=f"ROOT pid={p.pid} exe={exe}",
-                data={"pid": p.pid, "exe": p.exe},
-                severity="info",
-            ))
+            proc_events.root_process(
+                pid=p.pid,
+                exe=_shorten_path(p.exe),
+            )
 
         if len(result["root"]) > 10:
-            ctx.dispatcher.handle(Event(
-                type="info.proc.root_processes.truncated",
-                message=f"{len(result['root']) - 10} additional root processes not shown",
-                data={"omitted": len(result["root"]) - 10},
-                severity="info",
-            ))
+            proc_events.root_processes_truncated(
+                len(result["root"]) - 10
+            )
 

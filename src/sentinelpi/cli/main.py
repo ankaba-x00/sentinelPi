@@ -6,6 +6,7 @@ from sentinelpi.cli.context import CLIContext
 from sentinelpi.core.paths import default_data_dir, events_log_path, alerts_log_path
 from sentinelpi.core.logging import JSONLLogger
 from sentinelpi.core.output import emit
+from sentinelpi.core.event_factory import EventFactory
 from sentinelpi.alerting.policy import Policy
 from sentinelpi.alerting.dispatcher import Dispatcher
 from sentinelpi.alerting.sinks import ConsoleSink, JSONLFileSink
@@ -44,9 +45,12 @@ def main(ctx: click.Context, verbose: bool) -> None:
         verbose=verbose
     )
 
+    event_factory = EventFactory(dispatcher, namespace="cli")
+
     ctx.obj = CLIContext(
         platform=platform,
         dispatcher=dispatcher,
+        events=event_factory,
         verbose=verbose,
     )
 
