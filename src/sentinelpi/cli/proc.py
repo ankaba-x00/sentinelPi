@@ -10,6 +10,7 @@ from sentinelpi.core.event_factory import EventFactory
 from sentinelpi.analyzers.runner import AnalyzerRunner
 from sentinelpi.analyzers.proc_root_new import RootNewProcessAnalyzer
 from sentinelpi.analyzers.proc_suspicious_path import SuspiciousExecutablePathAnalyzer
+from sentinelpi.analyzers.proc_root_shell_parent import RootShellUnexpectedParentAnalyzer
 
 
 BASELINE_PATH = Path.home() / ".sentinelpi" / "proc_baseline.json"
@@ -76,6 +77,7 @@ def check(ctx: CLIContext) -> None:
     runner = AnalyzerRunner([
         RootNewProcessAnalyzer(),
         SuspiciousExecutablePathAnalyzer(),
+        RootShellUnexpectedParentAnalyzer(),
     ])
 
     context = {
