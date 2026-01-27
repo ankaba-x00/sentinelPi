@@ -9,6 +9,8 @@ from sentinelpi.modules.proc.diff import diff_processes
 from sentinelpi.core.event_factory import EventFactory
 from sentinelpi.analyzers.runner import AnalyzerRunner
 from sentinelpi.analyzers.proc_root_new import RootNewProcessAnalyzer
+from sentinelpi.analyzers.proc_suspicious_path import SuspiciousExecutablePathAnalyzer
+
 
 BASELINE_PATH = Path.home() / ".sentinelpi" / "proc_baseline.json"
 
@@ -73,12 +75,14 @@ def check(ctx: CLIContext) -> None:
 
     runner = AnalyzerRunner([
         RootNewProcessAnalyzer(),
+        SuspiciousExecutablePathAnalyzer(),
     ])
 
     context = {
         "proc.baseline": baseline,
         "proc.current": current,
         "proc.diff": result,
+        "platform": ctx.platform.name,
     }
 
     for event in runner.run(context=context):
