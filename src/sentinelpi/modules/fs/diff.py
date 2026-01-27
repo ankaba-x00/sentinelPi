@@ -29,3 +29,11 @@ def diff_files(
         "new": new,
         "deleted": deleted,
     }
+
+def count_findings(diff: dict[str, list]) -> int:
+    return (
+        len(diff.get("modified", []))
+        + len(diff.get("new", []))
+        + len(diff.get("deleted", []))
+    )
+

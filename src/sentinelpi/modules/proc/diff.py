@@ -22,3 +22,6 @@ def diff_processes(
         "new": new_processes,
         "root": root_processes,
     }
+
+def count_findings(diff: dict[str, list]) -> int:
+    return len(diff.get("new", [])) + len(diff.get("root", []))
