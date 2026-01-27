@@ -7,6 +7,8 @@ from sentinelpi.modules.fs.baseline import save_baseline, load_baseline
 from sentinelpi.modules.fs.diff import diff_files
 from sentinelpi.modules.fs.events import FsEventFactory
 from sentinelpi.core.event_factory import EventFactory
+from sentinelpi.analyzers.runner import AnalyzerRunner
+from sentinelpi.analyzers.fs_new_executable import NewExecutableFileAnalyzer
 
 
 BASELINE_PATH = Path.home() / ".sentinelpi" / "fs_baseline.json"
@@ -15,6 +17,8 @@ BASELINE_PATH = Path.home() / ".sentinelpi" / "fs_baseline.json"
 def _default_paths() -> list[Path]:
     return [
         Path.home() / ".ssh",
+        Path("/tmp"),
+        Path("/etc"),
     ]
 
 
@@ -58,6 +62,20 @@ def check(ctx: CLIContext) -> None:
     if not any(diff.values()):
         fs_events.clean()
         return
+    
+    runner = AnalyzerRunner([
+        NewExecutableFileAnalyzer(),
+    ])
+
+    context = {
+        "fs.baseline": baseline,
+        "fs.current": current,
+        "fs.diff": diff,
+        "platform": ctx.platform.name,
+    }
+
+    for event in runner.run(context=context):
+        ctx.dispatcher.handle(event)
 
     if diff["modified"]:
         fs_events.modified_files(len(diff["modified"]))

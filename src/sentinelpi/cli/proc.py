@@ -74,6 +74,10 @@ def check(ctx: CLIContext) -> None:
 
     result = diff_processes(baseline, current)
 
+    if not result["new"] and not result["root"]:
+        proc_events.clean()
+        return
+
     runner = AnalyzerRunner([
         RootNewProcessAnalyzer(),
         SuspiciousExecutablePathAnalyzer(),
@@ -89,10 +93,6 @@ def check(ctx: CLIContext) -> None:
 
     for event in runner.run(context=context):
         ctx.dispatcher.handle(event)
-
-    if not result["new"] and not result["root"]:
-        proc_events.clean()
-        return
 
     if result["new"]:
         proc_events.new_processes(len(result["new"]))
@@ -116,4 +116,3 @@ def check(ctx: CLIContext) -> None:
             proc_events.root_processes_truncated(
                 len(result["root"]) - 10
             )
-
