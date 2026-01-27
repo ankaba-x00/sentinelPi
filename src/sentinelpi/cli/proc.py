@@ -7,7 +7,8 @@ from sentinelpi.modules.proc.baseline import save_baseline, load_baseline
 from sentinelpi.modules.proc.events import ProcEventFactory
 from sentinelpi.modules.proc.diff import diff_processes
 from sentinelpi.core.event_factory import EventFactory
-
+from sentinelpi.analyzers.runner import AnalyzerRunner
+from sentinelpi.analyzers.proc_root_new import RootNewProcessAnalyzer
 
 BASELINE_PATH = Path.home() / ".sentinelpi" / "proc_baseline.json"
 
@@ -69,6 +70,19 @@ def check(ctx: CLIContext) -> None:
         return
 
     result = diff_processes(baseline, current)
+
+    runner = AnalyzerRunner([
+        RootNewProcessAnalyzer(),
+    ])
+
+    context = {
+        "proc.baseline": baseline,
+        "proc.current": current,
+        "proc.diff": result,
+    }
+
+    for event in runner.run(context=context):
+        ctx.dispatcher.handle(event)
 
     if not result["new"] and not result["root"]:
         proc_events.clean()
