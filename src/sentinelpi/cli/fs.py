@@ -9,6 +9,7 @@ from sentinelpi.modules.fs.events import FsEventFactory
 from sentinelpi.core.event_factory import EventFactory
 from sentinelpi.analyzers.runner import AnalyzerRunner
 from sentinelpi.analyzers.fs_new_executable import NewExecutableFileAnalyzer
+from sentinelpi.analyzers.fs_critical_and_autostart import FsCriticalAndAutostartAnalyzer
 
 
 BASELINE_PATH = Path.home() / ".sentinelpi" / "fs_baseline.json"
@@ -17,8 +18,14 @@ BASELINE_PATH = Path.home() / ".sentinelpi" / "fs_baseline.json"
 def _default_paths() -> list[Path]:
     return [
         Path.home() / ".ssh",
+        Path.home() / "Library" / "LaunchAgents",
+        Path.home() / "Library" / "LaunchDaemons",
         Path("/tmp"),
         Path("/etc"),
+        Path("/Library/LaunchAgents"),
+        Path("/Library/LaunchDaemons"),
+        # Path("/etc/cron.d"),
+        # Path("/etc/init.d"),
     ]
 
 
@@ -65,6 +72,7 @@ def check(ctx: CLIContext) -> None:
     
     runner = AnalyzerRunner([
         NewExecutableFileAnalyzer(),
+        FsCriticalAndAutostartAnalyzer(),
     ])
 
     context = {
