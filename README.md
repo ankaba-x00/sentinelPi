@@ -40,6 +40,8 @@ Pipeline explained
 ## Project Structure
 
 ## Why This Project?
+This project started after a coding interview where I was shown a Python script using click. Since I hadn’t used the library before, I decided to explore it properly by building something meaningful. <br>
+The result is a project that combines three things I thoroughly enjoy, Python, Raspberry Pi/Linux and Blue Teaming, all while adding click to my active tool repertoire. Regardless whether the interview will lead to a paycheck or not, it certainly lead to a really cool project I have fun working on.
 
 ## Contact 
 
